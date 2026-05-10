@@ -124,10 +124,28 @@ which there is no final removal date yet.
 
 ## Contributing large patches
 
-Before sending a PR for a large change which designs/redesigns or reworks an
-existing component, we require an architecture review from  multiple
+We welcome contributions from anyone.
+
+If you wish to contribute a new large feature, you are encouraged to discuss
+it in Discord or a GitHub Discussion first before diving in. Before spending
+to much time on a particular design, you should see if the community and the
+maintainers have any feedback on your idea and general approach. It also is a
+better experience for you as an author if you first contributed smaller patches
+first, so you understand how the project and the community around it works.
+
+If you open a pull request without discussion first, you may find that the
+community already has discussed this and found a better approach, or that it
+already was deemed not to be a fit for the project.
+
+Since many ideas have come up before, but they haven't been implemented because
+they might be deceptively nuanced, or there may be strong opinions around them.
+Bringing it up to the community first helps discover past discussions, so your
+design can be informed by them.
+
+For such changes, we require an architecture review from  multiple
 stakeholders, which we do with [Design Docs](design_docs.md), see the
 [process here](design_docs.md#process).
+
 
 ## Contributing to the documentation
 
