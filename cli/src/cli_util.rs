@@ -122,6 +122,7 @@ use jj_lib::revset::RevsetStreamExt as _;
 use jj_lib::revset::RevsetWorkspaceContext;
 use jj_lib::revset::SymbolResolverExtension;
 use jj_lib::revset::UserRevsetExpression;
+use jj_lib::rewrite::RebaseOptions;
 use jj_lib::rewrite::restore_tree;
 use jj_lib::settings::HumanByteSize;
 use jj_lib::settings::UserSettings;
@@ -1374,7 +1375,19 @@ impl WorkspaceCommandHelper {
 
         let mut tx = tx.into_inner();
         // Rebase here to show slightly different status message.
-        let num_rebased = tx.repo_mut().rebase_descendants().await?;
+        let immutable_expr = self
+            .env
+            .resolve_immutable_expression(tx.repo())
+            // Error will be reported by finish_transaction()
+            .unwrap_or_else(|_| RevsetExpression::root());
+        let mut num_rebased = 0;
+        tx.repo_mut()
+            .rebase_descendants_with_options(
+                &immutable_expr,
+                &RebaseOptions::default(),
+                |_old_commit, _rebased_commit| num_rebased += 1,
+            )
+            .await?;
         if num_rebased > 0 {
             writeln!(
                 ui.status(),
@@ -2184,11 +2197,6 @@ to the current parents may contain changes from multiple commits.
         description: impl Into<String>,
         _git_import_export_lock: &GitImportExportLock,
     ) -> Result<(), CommandError> {
-        let num_rebased = tx.repo_mut().rebase_descendants().await?;
-        if num_rebased > 0 {
-            writeln!(ui.status(), "Rebased {num_rebased} descendant commits")?;
-        }
-
         // This can fail if trunk() bookmark gets deleted or conflicted. If the
         // unresolvable trunk() issue gets addressed differently, it should be
         // okay to propagate the error.
@@ -2203,6 +2211,21 @@ to the current parents may contain changes from multiple commits.
                 RevsetExpression::root()
             }
         };
+
+        // Commands like "jj git fetch" can update immutable commits to reflect
+        // the remote changes. Their immutable descendants shouldn't be rebased.
+        let mut num_rebased = 0;
+        tx.repo_mut()
+            .rebase_descendants_with_options(
+                &immutable_expr,
+                &RebaseOptions::default(),
+                |_old_commit, _rebased_commit| num_rebased += 1,
+            )
+            .await?;
+        if num_rebased > 0 {
+            writeln!(ui.status(), "Rebased {num_rebased} descendant commits")?;
+        }
+
         for (name, wc_commit_id) in &tx.repo().view().wc_commit_ids().clone() {
             let is_immutable = immutable_expr
                 .intersection(&RevsetExpression::commit(wc_commit_id.clone()))
