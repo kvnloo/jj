@@ -61,6 +61,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   local bookmarks were actually forgotten (e.g. when only an untracked remote
   bookmark matched). [#9181](https://github.com/jj-vcs/jj/issues/9181).
 
+* `jj` now creates a new working-copy revision during snapshotting if the
+  working copy was immutable. Previously, the new revision was created
+  immediately after the working copy became immutable.
+
 * The `builtin_log_redacted` template now also redacts workspace names.
 
 ## [0.41.0] - 2026-05-06
